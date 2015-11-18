@@ -92,7 +92,7 @@ public class MainActivity extends Activity {
         mIntroView.setOnReadyListener(new IntroView.OnReadyListener() {
             @Override
             public void onReady() {
-                loadPhotos();
+//                loadPhotos();
             }
         });
 
@@ -166,110 +166,6 @@ public class MainActivity extends Activity {
         } else if (alpha < 1.0f && decorView.getBackground() == null) {
             decorView.setBackground(mWindowBackground);
             mWindowBackground = null;
-        }
-    }
-
-    private void loadPhotos() {
-        final Resources resources = getResources();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (State s : mStates) {
-                    for (int resId : s.photos) {
-                        s.bitmaps.add(BitmapFactory.decodeResource(resources, resId));
-                    }
-                }
-
-                mIntroView.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        finishLoadingPhotos();
-                    }
-                });
-            }
-        }, "Photos Loader").start();
-    }
-
-    private void finishLoadingPhotos() {
-        mIntroView.stopWaitAnimation();
-
-        LinearLayout container = (LinearLayout) findViewById(R.id.container);
-        LayoutInflater inflater = getLayoutInflater();
-
-        Space spacer = new Space(this);
-        spacer.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                findViewById(R.id.scroller).getHeight()));
-        container.addView(spacer);
-
-        for (State s : mStates) {
-            addState(inflater, container, s);
-        }
-    }
-
-    private void addState(LayoutInflater inflater, LinearLayout container, final State state) {
-        final int margin = getResources().getDimensionPixelSize(R.dimen.activity_peek_margin);
-
-        final View view = inflater.inflate(R.layout.item_state, container, false);
-        final StateView stateView = (StateView) view.findViewById(R.id.state);
-        stateView.setSvgResource(state.map);
-        view.setBackgroundResource(state.background);
-
-        LinearLayout subContainer = (LinearLayout) view.findViewById(R.id.sub_container);
-        Space spacer = new Space(this);
-        spacer.setLayoutParams(new LinearLayout.LayoutParams(
-                container.getWidth() - margin, LinearLayout.LayoutParams.MATCH_PARENT));
-        subContainer.addView(spacer);
-
-        ImageView first = null;
-        for (Bitmap b : state.bitmaps) {
-            ImageView image =
-                    (ImageView) inflater.inflate(R.layout.item_photo, subContainer, false);
-            if (first == null) first = image;
-            image.setImageBitmap(b);
-            subContainer.addView(image);
-        }
-
-        ColorMatrix cm = new ColorMatrix();
-        cm.setSaturation(0.0f);
-        first.setTag(cm);
-        first.setColorFilter(new ColorMatrixColorFilter(cm));
-
-        final ImageView bw = first;
-
-        TrackingHorizontalScrollView s =
-                (TrackingHorizontalScrollView) view.findViewById(R.id.scroller);
-        s.setOnScrollChangedListener(new TrackingHorizontalScrollView.OnScrollChangedListener() {
-            @Override
-            public void onScrollChanged(TrackingHorizontalScrollView source,
-                    int l, int t, int oldl, int oldt) {
-                final float width = source.getWidth() - margin;
-                final float alpha = Math.min(width, Math.max(0, l)) / width;
-
-                stateView.setTranslationX(-width / 3.0f * alpha);
-                stateView.setParallax(1.0f - alpha);
-
-                removeStateOverdraw(view, state, alpha);
-
-                if (alpha < 1.0f) {
-                    ColorMatrix cm = (ColorMatrix) bw.getTag();
-                    cm.setSaturation(alpha);
-                    bw.setColorFilter(new ColorMatrixColorFilter(cm));
-                } else {
-                    bw.setColorFilter(null);
-                }
-            }
-        });
-
-        container.addView(view);
-    }
-
-    private void removeStateOverdraw(View stateView, State state, float alpha) {
-        if (alpha >= 1.0f && stateView.getBackground() != null) {
-            stateView.setBackground(null);
-            stateView.findViewById(R.id.state).setVisibility(View.INVISIBLE);
-        } else if (alpha < 1.0f && stateView.getBackground() == null) {
-            stateView.setBackgroundResource(state.background);
-            stateView.findViewById(R.id.state).setVisibility(View.VISIBLE);
         }
     }
 
