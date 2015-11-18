@@ -24,20 +24,4 @@
         r:strokeWidth="2.0"
         r:strokeColor="#ffffffff" />
 
-    <org.curiouscreature.android.roadtrip.TrackingScrollView
-        android:id="@+id/scroller"
-
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <LinearLayout
-            android:id="@+id/container"
-
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-
-            android:orientation="vertical" />
-
-    </org.curiouscreature.android.roadtrip.TrackingScrollView>
-
 </merge>

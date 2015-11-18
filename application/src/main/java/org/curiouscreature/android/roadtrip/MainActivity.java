@@ -17,63 +17,16 @@
 package org.curiouscreature.android.roadtrip;
 
 import android.app.Activity;
-import android.content.res.Resources;
-import android.graphics.*;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.*;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.Space;
 import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @SuppressWarnings("ConstantConditions")
 public class MainActivity extends Activity {
-    private static final boolean ANIMATE_BACKGROUND = false;
-
-    private static class State {
-        int background;
-        int map;
-        int photos[];
-        final List<Bitmap> bitmaps = new ArrayList<Bitmap>();
-
-        State(int background, int map, int[] photos) {
-            this.background = background;
-            this.map = map;
-            this.photos = photos;
-        }
-    }
-
-    private final State[] mStates = {
-            new State(R.color.az, R.raw.map_az, new int[] {
-                    R.drawable.photo_01_antelope,
-                    R.drawable.photo_09_horseshoe,
-                    R.drawable.photo_10_sky
-            }),
-            new State(R.color.ut, R.raw.map_ut, new int[] {
-                    R.drawable.photo_08_arches,
-                    R.drawable.photo_03_bryce,
-                    R.drawable.photo_04_powell,
-            }),
-            new State(R.color.ca, R.raw.map_ca, new int[] {
-                    R.drawable.photo_07_san_francisco,
-                    R.drawable.photo_02_tahoe,
-                    R.drawable.photo_05_sierra,
-                    R.drawable.photo_06_rockaway
-            }),
-    };
 
     private IntroView mIntroView;
     private Drawable mActionBarDrawable;
-    private Drawable mWindowBackground;
-    private int mAccentColor;
-    private int mAccentColor2;
-
-    private final Rect mTempRect = new Rect();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,11 +37,8 @@ public class MainActivity extends Activity {
         mActionBarDrawable.setAlpha(0);
         getActionBar().setBackgroundDrawable(mActionBarDrawable);
 
-        mAccentColor = getResources().getColor(R.color.accent);
-        mAccentColor2 = getResources().getColor(R.color.accent2);
-
         mIntroView = (IntroView) findViewById(R.id.intro);
-        mIntroView.setSvgResource(R.raw.map_usa);
+
         mIntroView.setOnReadyListener(new IntroView.OnReadyListener() {
             @Override
             public void onReady() {
@@ -96,77 +46,6 @@ public class MainActivity extends Activity {
             }
         });
 
-        ((TrackingScrollView) findViewById(R.id.scroller)).setOnScrollChangedListener(
-                new TrackingScrollView.OnScrollChangedListener() {
-            @Override
-            public void onScrollChanged(TrackingScrollView source, int l, int t, int ol, int ot) {
-                handleScroll(source, t);
-            }
-        });
-    }
-
-    private void handleScroll(ViewGroup source, int top) {
-        final float actionBarHeight = getActionBar().getHeight();
-        final float firstItemHeight = findViewById(R.id.scroller).getHeight() - actionBarHeight;
-        final float alpha = Math.min(firstItemHeight, Math.max(0, top)) / firstItemHeight;
-
-        mIntroView.setTranslationY(-firstItemHeight / 3.0f * alpha);
-        mActionBarDrawable.setAlpha((int) (255 * alpha));
-
-        View decorView = getWindow().getDecorView();
-        removeOverdraw(decorView, alpha);
-        if (ANIMATE_BACKGROUND) {
-            changeBackgroundColor(decorView, alpha);
-        }
-
-        ViewGroup container = (ViewGroup) source.findViewById(R.id.container);
-        final int count = container.getChildCount();
-        for (int i = 0; i < count; i++) {
-            View item = container.getChildAt(i);
-            View v = item.findViewById(R.id.state);
-            if (v != null && v.getGlobalVisibleRect(mTempRect)) {
-                ((StateView) v).reveal(source, item.getBottom());
-            }
-        }
-    }
-
-    @SuppressWarnings("PointlessBitwiseExpression")
-    private void changeBackgroundColor(View decorView, float alpha) {
-        float srcR = ((mAccentColor >> 16) & 0xff) / 255.0f;
-        float srcG = ((mAccentColor >>  8) & 0xff) / 255.0f;
-        float srcB = ((mAccentColor >>  0) & 0xff) / 255.0f;
-
-        float dstR = ((mAccentColor2 >> 16) & 0xff) / 255.0f;
-        float dstG = ((mAccentColor2 >>  8) & 0xff) / 255.0f;
-        float dstB = ((mAccentColor2 >>  0) & 0xff) / 255.0f;
-
-        int r = (int) ((srcR + ((dstR - srcR) * alpha)) * 255.0f);
-        int g = (int) ((srcG + ((dstG - srcG) * alpha)) * 255.0f);
-        int b = (int) ((srcB + ((dstB - srcB) * alpha)) * 255.0f);
-
-        ColorDrawable background = (ColorDrawable) decorView.getBackground();
-        if (background != null) {
-            background.setColor(0xff000000 | r << 16 | g << 8 | b);
-        }
-    }
-
-    private void removeOverdraw(View decorView, float alpha) {
-        if (alpha >= 1.0f) {
-            // Note: setting a large negative translation Y to move the View
-            // outside of the screen is an optimization. We could make the view
-            // invisible/visible instead but this would destroy/create its backing
-            // layer every time we toggle visibility. Since creating a layer can
-            // be expensive, especially software layers, we would introduce stutter
-            // when the view is made visible again.
-            mIntroView.setTranslationY(-mIntroView.getHeight() * 2.0f);
-        }
-        if (alpha >= 1.0f && decorView.getBackground() != null) {
-            mWindowBackground = decorView.getBackground();
-            decorView.setBackground(null);
-        } else if (alpha < 1.0f && decorView.getBackground() == null) {
-            decorView.setBackground(mWindowBackground);
-            mWindowBackground = null;
-        }
     }
 
     @Override
